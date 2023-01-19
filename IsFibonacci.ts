@@ -3,7 +3,9 @@ type MakeTuple<N extends number, T extends any[] = []> =
   T['length'] extends N ? T : MakeTuple<N, [...T, any]>
 
 
-// returns true if a number is in the fibonacci sequence and never if not
+// checks if a given number is a Fibonacci number and returns
+// that number if it is, otherwise returns never.
+
 type IsFibonacci<
   N extends number,
   A extends any[] = [1],
@@ -25,6 +27,7 @@ type IsFibonacci<
 function onlyUseFibonacciNumbers<X extends number>(x: IsFibonacci<X>) {
   console.log(`${x} is a Fibonacci number!`)
 }
+
 
 // no error since numbers are fibonacci numbers
 onlyUseFibonacciNumbers(1)
