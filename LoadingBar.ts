@@ -148,3 +148,60 @@ function test(p: number, a:any[]=[], flag=false): any[] {
 const result = test(5)
 
 console.log({ result })
+
+
+
+
+
+
+
+
+
+type H<
+  // N is a given number
+  N,
+  // V is used to add 1 to a number since we can't use addition (0 -> 1), (1 -> 2), etc.
+  V = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  // check if N is 0 if so return 0, otherwise cast to string and extract first digit after 0.(M)(R...) and cast to
+  // number along with anything else after R. If R is an empty string '' then we can just return M since this means
+  // it must be .(1)(0), .(2)(0), .(3)(0), etc. otherwise we use M to index V to add one.
+  X = N extends 0 ? 0 : `${N}` extends `0.${infer M extends number}${infer R}` ? R extends '' ? M : V[M] : 10,
+  // A is an empty tuple which is used to count the iterations by tracking the length and appending 
+  // elements recursively. 
+  A = [],
+  // B is a cached flag to help denote when to display ⚪ or 🔵 since we can only check for equality and not less than
+  // or greater than we need to be able to keep track of when we are finished showing the percent loaded.
+  B = 1,
+  // O is our output string which we return at the end.
+  O = '',
+  // L tracks the length of A each pass.
+  L = A['length'],
+  // C checks if X (progress loaded) is euqal to 0 or our length L, if so will resolve to 0 
+  // otherwise will resolve to 1. Note this is not the logical or symbol, but instead a union type.
+  C = X extends(L|0)?0:1,
+  // E is a flag which we use to determine which emoji to display. Each pass E will become the new B and once
+  // the "never" type becomes C or B this will result to "never" and will stay that way till the end.
+  E = B & C,
+  // S is which string to display and in order to check for "never" we need to compare [never] inside a tuple
+  // otherwise it becomes distributive, also [never] ~ [0]
+  S = [E] extends [0] ? '⚪' : '🔵'
+> =
+  // Here is the logic portion, basically check if our length L is 10 and if so return our output O
+  L extends 10 ?  O : 
+  // If L is not 10 then call recursively adding a new element to A each time to keep of the iterations
+  // using E as the new B and concatinating O with S. Unfortunately we can only keep track of the tuple
+  // A's length and not strings. 
+  H<N, V, X, [...A, S], E, `${O}${S}`>
+
+type Test0 = H<0.0>
+type Test1 = H<0.1>
+type Test2 = H<0.2>
+type Test3 = H<0.3>
+type Test4 = H<0.41>
+type Test5 = H<0.5>
+type Test6 = H<0.600>
+type Test7 = H<0.7>
+type Test8 = H<0.8>
+type Test9 = H<0.9>
+type Test10 = H<1.0>
+type TestN1 = H<-1>
