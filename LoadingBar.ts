@@ -115,7 +115,7 @@ type F<
   E = B & C,
 >=
   L extends 10 ? A : 
-     F<N, [...A, [E] extends [never] ? '⚪' : '🔵'], E>
+     F<N, [...A, [E] extends [0] ? '⚪' : '🔵'], E>
 
 type Test0 = F<0>
 type Test1 = F<1>
