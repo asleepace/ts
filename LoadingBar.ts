@@ -149,10 +149,19 @@ const result = test(5)
 
 console.log({ result })
 
-
-
-
-
+type H<
+  N,
+  V = [1,2,3,4,5,6,7,8,9,10],
+  P = N extends 0 ? 0 : `${N}` extends `0.${infer M extends number}${infer R}` ? R extends '' ? M : V[M] : 10,
+  C = [],
+  I = 1,
+  O = '',
+  L = C['length'],
+  D = P extends L ? 0 : 1 & I,
+  S = [D] extends [0] ? '⚪' : '🔵'
+>=
+ L extends 10 ? O : 
+    H<N, V, P, [...C, S], D, `${O}${S}`>
 
 
 
