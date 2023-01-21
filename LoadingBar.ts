@@ -29,23 +29,34 @@ type Gs<S> = `${S}` extends `${infer N extends number}` ? N : 0
 //         : 1
 //     : 0
 
-type Parse2<N,V=[1,2,3,4,5,6,7,8,9,10]>=
-    `${N}` extends `${1|0}.${infer B}` ? 
-        B extends `${infer F extends number}${infer R}` ? 
-            [V[F]] : [B]
-    : N
+// take digit of string and return
+type D<N,S=`${N}`> =
+     S extends `${infer F}${infer R}` ? F extends '0' ? [...D<R>]:[F,...D<R>] : []
 
-type a1 = Parse2<0>
-type a2 = Parse2<0.0>
-type a3 = Parse2<0.1>
-type a4 = Parse2<0.2>
-type a5 = Parse2<0.21>
-type a6 = Parse2<0.32>
-type a7 = Parse2<0.455>
-type a8 = Parse2<0.53>
-type a9 = Parse2<0.67>
-type a10 = Parse2<0.90>
-type a11 = Parse2<0.99999>
+
+type Parse2<N, V=[1,2,3,4,5,6,7,8,9,10]>=
+    // return 0 if we find number is a 0, this works for 0, 0.0, etc.
+    N extends 0 ? 0 : 
+    // extract first and rest digits after (0.)
+    `${N}` extends `0.${infer M extends number}${infer R}` ?
+        // if R is just 0's it will be an empty "" then we just return
+        // the digit as is since this will be 0.1, 0.2, 0.3, etc.
+        // otherwise add one and return value
+        R extends '' ? M : V[M]
+    // if the number doesn't start with "0." then return 10 as this is the
+    // max value (i.e 100%)
+    : 10
+
+
+type a0 = Parse2<0>
+type b0 = Parse2<0.0>
+type c0 = Parse2<0.0001>
+type a1 = Parse2<0.2>
+type a2 = Parse2<0.2000>
+type a3 = Parse2<0.21>
+type a4 = Parse2<0.00021>
+type a5 = Parse2<1.0>
+type a6 = Parse2<1.12312>
 
 
 type TimesTen
