@@ -1,11 +1,54 @@
 /**
- * Type System - Utilities
- * Colin Teahan
+ * Sorted - Utility Type
  * 
- * This file contains several utility functions that can help with TypeScript types.
- * Below you can find helpful generic types such as IsGreater, InsertElement,
- * and Sorted. Note that all arithmatic must be done using Tuple length.
+ * Takes a tuple of unsorted numbers and returns a sorted tuple of the
+ * same values in ascending order. Can handle negative as well as 
+ * duplicate numbers.
+ * 
+ * This works by destructuring the list into [List[0], ...List.slice(1)]
+ * sorting the list slice recursively until the slice is only one element.
+ * Then as we return we insert List[0] at each level into a sorted list.
+ * 
+ * To change the order please see the IsGreater type above. Note that
+ * this will not work for floating point numbers (yet).
  */
+type SortedInternal<List extends number[]> =
+    List['length'] extends 0 ? [] :
+    List['length'] extends 1 ? List :
+    List extends [infer First, ...infer Rest] ?
+        InsertElement<First, Sorted<Rest>>
+    : List
+
+/**
+ * Sorted - Read Only
+ * 
+ * This generic type can be used if the List is set to readonly, which
+ * can occur when using "as const" with a JavaScript array. 
+ */
+type Sorted<List extends readonly number[]> = SortedInternal<[...List]>
+   
+
+/**
+ * Compare
+ * 
+ * returns true if A is greater than B otherwise return never, swap to
+ * change sorting order.
+ * 
+ * NOTE: negative -0's lose their sign comparing this way.
+ */
+type Compare<
+    A extends number, 
+    B extends number, 
+    AbsValueA extends number = IsNegative<A>,
+    AbsValueB extends number = IsNegative<B>
+>= 
+    [AbsValueA] extends [never] ?
+        [AbsValueB] extends [never] ? IsGreater<A, B> : true :
+    // check if B has a value then we know [-A, B] => never
+    [AbsValueB] extends [never] ? never
+    // otherwise we know -A, -B so we check IsGreater<Abs(B), Abs(A)>
+    : IsGreater<AbsValueB, AbsValueA>
+
 
 // returns length of tuple T
 type Length<T extends any[]> = T['length']
@@ -54,66 +97,13 @@ type InsertElement<Item extends number, List extends number[]=[]>=
     : never
 
 
-/**
- * Sorted - Utility Type
- * 
- * Takes a tuple of unsorted numbers and returns a sorted tuple of the
- * same values in ascending order. Can handle negative as well as 
- * duplicate numbers.
- * 
- * This works by destructuring the list into [List[0], ...List.slice(1)]
- * sorting the list slice recursively until the slice is only one element.
- * Then as we return we insert List[0] at each level into a sorted list.
- * 
- * To change the order please see the IsGreater type above. Note that
- * this will not work for floating point numbers (yet).
- */
-type SortedInternal<List extends number[]> =
-    List['length'] extends 0 ? [] :
-    List['length'] extends 1 ? List :
-    List extends [infer First, ...infer Rest] ?
-        InsertElement<First, Sorted<Rest>>
-    : List
-
-
-
-/**
- * Sorted - Read Only
- * 
- * This generic type can be used if the List is set to readonly, which
- * can occur when using "as const" with a JavaScript array. 
- */
-type Sorted<List extends readonly number[]> = SortedInternal<[...List]>
-   
-
-
-/**
- * Compare
- * 
- * returns true if A is greater than B otherwise return never, swap to
- * change sorting order.
- * 
- * NOTE: negative -0's lose their sign comparing this way.
- */
-type Compare<
-    A extends number, 
-    B extends number, 
-    AbsValueA extends number = IsNegative<A>,
-    AbsValueB extends number = IsNegative<B>
->= 
-    [AbsValueA] extends [never] ?
-        [AbsValueB] extends [never] ? IsGreater<A, B> : true :
-    // check if B has a value then we know [-A, B] => never
-    [AbsValueB] extends [never] ? never
-    // otherwise we know -A, -B so we check IsGreater<Abs(B), Abs(A)>
-    : IsGreater<AbsValueB, AbsValueA>
-
-
 
 /*  *   *   *   *   test cases  *   *   *   *   */
 
 
+
 const ReadOnlyItems = [5, 3, 0, 6, 1, 2] as const
+
 type TestDataSorted = Sorted<typeof ReadOnlyItems>
 //   ^?
 
@@ -144,11 +134,13 @@ type MergeSortTest5 = Sorted<[9, 8, -7, 6, 5, 4, 3, 2, -1, 1]>
 
 const someUnsortedData = [6, 1, 5, 3, 2] as const
 
-function shouldBeSorted<T>(input: Sorted<T>) {
+function shouldBeSorted<T>(input: T): Sorted<T> {
     // do something with sorted data
+    return [...someUnsortedData]
 }
 
-shouldBeSorted(someUnsortedData)
+const output = shouldBeSorted(someUnsortedData)
+console.log({ output })
 
 type MergeSortTest6 = Sorted<[-0, -1, 0, -7]>
 //   ^?
