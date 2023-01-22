@@ -13,15 +13,26 @@
  * this will not work for floating point numbers (yet).
  */
 
-type Sorted<List extends readonly number[]> = 
-    SortedInternal<[...List]>
    
-type SortedInternal<List extends number[]> =
+type Sorted<List extends number[]> =
     List['length'] extends 0 ? [] :
     List['length'] extends 1 ? List :
     List extends [infer First, ...infer Rest] ?
         InsertElement<First, Sorted<Rest>>
     : List
+
+
+type SortedReadonly<List extends readonly number[]> = Sorted<[...List]>
+
+
+// type Sorted<List extends unknown> =
+//     Sorted extends readonly number[] ?
+//         SortedReadonly<[...List]> :
+//     Sorted extends number[] ?
+//         SortedNumbers<[...List]>
+//     : never
+    
+
 
 /**
  * Compare
@@ -101,40 +112,38 @@ const ReadOnlyItems = [5, 3, 0, 6, 1, 2] as const
 type TestDataSorted = Sorted<typeof ReadOnlyItems>
 //   ^?
 
-type MergeSortTest0 = Sorted<[]>
+type SortTest0 = Sorted<[]>
 //   ^?
 
-type MergeSortTest1 = Sorted<[0]>
+type SortTest1 = Sorted<[0]>
 //   ^?
 
-type MergeSortTest6 = Sorted<[-0, -1, 0, -7]>
+type SortTest6 = Sorted<[-0, -1, 0, -7]>
 //   ^?
 
-type MergeSortTest2 = Sorted<[1, 5, 4]>
+type SortTest2 = Sorted<[1, 5, 4]>
 //   ^?
 
-type MergeSortTest3 = Sorted<[2, 1, 3]>
+type SortTest3 = Sorted<[2, 1, 3]>
 //   ^?
 
-type MergeSortTest4 = Sorted<[5, 2, 1, 3, 4]>
+type SortTest4 = Sorted<[5, 2, 1, 3, 4]>
 //   ^? 
 
-type MergeSortTest4 = Sorted<[1, 6, 1, 3, -1, 6, 2, 3, 5]>
+type SortTest4 = Sorted<[1, 6, 1, 3, -1, 6, 2, 3, 5]>
 //   ^?
 
-type MergeSortTest5 = Sorted<[9, 8, -7, 6, 5, 4, 3, 2, -1, 1]>
+type SortTest5 = Sorted<[9, 8, -7, 6, 5, 4, 3, 2, -1, 1]>
 //   ^?
 
 
 const someUnsortedData = [6, 1, 5, 3, 2] as const
 
-function shouldBeSorted<T>(input: T): Sorted<T> {
+const unsortedData = [6, 1, 3, 2, 7]
+
+function shouldBeSorted<T>(input: SortedReadonly<T>) {
     // do something with sorted data
-    return [...someUnsortedData]
+    return input
 }
 
-const output = shouldBeSorted(someUnsortedData)
-console.log({ output })
-
-type MergeSortTest6 = Sorted<[-0, -1, 0, -7]>
-//   ^?
+const output = shouldBeSorted(unsortedData)
