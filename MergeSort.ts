@@ -1,3 +1,11 @@
+/**
+ * Type System - Utilities
+ * Colin Teahan
+ * 
+ * This file contains several utility functions that can help with TypeScript types.
+ * Below you can find helpful generic types such as IsGreater, InsertElement,
+ * and Sorted. Note that all arithmatic must be done using Tuple length.
+ */
 
 // returns length of tuple T
 type Length<T extends any[]> = T['length']
@@ -8,7 +16,14 @@ type Tuple<S extends number, T extends any[]=[]> =
 
 // returns absolute value if a number is negative otherwise never
 type IsNegative<A extends number, S extends string = `${A}`> =
-    S extends `-${infer V extends number}` ? true : never
+    S extends `-${infer V extends number}` ? V : never
+
+type IsN1 = IsNegative<-1>
+//   ^?
+type IsN2 = IsNegative<-10>
+//   ^?
+type IsN3 = IsNegative<3>
+//   ^?
 
 // returns true if A is greater than B otherwise never
 type IsGreater<A extends number, B extends number,
@@ -18,22 +33,22 @@ type IsGreater<A extends number, B extends number,
 
 // returns a sorted tuple of [A and B] based on IsGreater
 type SortPair<A extends number, B extends number> =
-    [IsGreater<A, B>] extends [true] ?
-        [B, A] : [A, B]            
+    [IsGreater<A, B>] extends [never] ?
+        [A, B] : [B, A]            
 
 // returns a tuple of A and B in ascending order
-type Compare<A extends number, B extends number> =
-    [IsGreater<A, B>] extends [never] ? 
-        [A, B] : [B, A]
+// type Compare<A extends number, B extends number> =
+//     [IsGreater<A, B>] extends [never] ? 
+//         [A, B] : [B, A]
 
 // insert an element into a sorted list in ascending order
 type InsertElement<Item extends number, List extends number[]=[]>=
     List['length'] extends 0 ? 
         [Item] : 
     List['length'] extends 1 ? 
-        Compare<Item, List[0]> :
+        SortPair<Item, List[0]> :
     List extends [infer First, ...infer Rest] ?
-        [IsGreater<Item, First>] extends [never] ?
+        [Compare<Item, First>] extends [never] ?
             [Item, First, ...Rest] :
             [First, ...InsertElement<Item, Rest>]
     : never
@@ -60,12 +75,29 @@ type Sorted<List extends number[]> =
         InsertElement<First, Sorted<Rest>>
     : never
 
-
-
+/**
+ * Compare
+ * 
+ * returns true if A is greater than B otherwise return never, swap to
+ * change sorting order.
+ */
+type Compare<
+    A extends number, 
+    B extends number, 
+    AbsValueA extends number = IsNegative<A>,
+    AbsValueB extends number = IsNegative<B>
+>= 
+    [AbsValueA] extends [never] ?
+        [AbsValueB] extends [never] ?
+            IsGreater<A, B> : true
+    :   [AbsValueB] extends [never] ?
+            never
+    : never
 
 /*  *   *   *   *   test cases  *   *   *   *   */
 
-
+type t = [Compare<1, 2>, Compare<2, 1>, Compare<1, -3>, Compare<-1, -2>]
+//   ^?
 
 
 type MergeSortTest0 = Sorted<[]>
@@ -73,6 +105,9 @@ type MergeSortTest0 = Sorted<[]>
 
 type MergeSortTest1 = Sorted<[0]>
 //   ^?
+
+
+type MergeSortTest2 = Sorted<[-0, -0, 0]
 
 type MergeSortTest2 = Sorted<[10, 8]>
 //   ^?
@@ -83,8 +118,8 @@ type MergeSortTest3 = Sorted<[2, 1, 3]>
 type MergeSortTest4 = Sorted<[5, 2, 1, 3, 4]>
 //   ^? 
 
-type MergeSortTest4 = Sorted<[1, 6, 1, 3, 5, 6, 2, 3, 5]>
+type MergeSortTest4 = Sorted<[1, 6, 1, 3, -1, 6, 2, 3, 5]>
 //   ^?
 
-type MergeSortTest5 = Sorted<[9, 8, 7, 6, 5, 4, 3, 2, 1, 1]>
+type MergeSortTest5 = Sorted<[9, 8, -7, 6, 5, 4, 3, 2, -1, 1]>
 //   ^?
