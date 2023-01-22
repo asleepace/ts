@@ -33,7 +33,7 @@ type IsGreater<A extends number, B extends number,
 
 // returns a sorted tuple of [A and B] based on IsGreater
 type SortPair<A extends number, B extends number> =
-    [IsGreater<A, B>] extends [never] ?
+    [Compare<A, B>] extends [never] ?
         [A, B] : [B, A]            
 
 // returns a tuple of A and B in ascending order
@@ -67,6 +67,7 @@ type InsertElement<Item extends number, List extends number[]=[]>=
  * 
  * To change the order please see the IsGreater type above. Note that
  * this will not work for floating point numbers (yet).
+ *
  */
 type Sorted<List extends number[]> =
     List['length'] extends 0 ? [] :
@@ -80,6 +81,8 @@ type Sorted<List extends number[]> =
  * 
  * returns true if A is greater than B otherwise return never, swap to
  * change sorting order.
+ * 
+ * NOTE: negative -0's lose their sign comparing this way.
  */
 type Compare<
     A extends number, 
@@ -88,16 +91,13 @@ type Compare<
     AbsValueB extends number = IsNegative<B>
 >= 
     [AbsValueA] extends [never] ?
-        [AbsValueB] extends [never] ?
-            IsGreater<A, B> : true
-    :   [AbsValueB] extends [never] ?
-            never
-    : never
+        [AbsValueB] extends [never] ? IsGreater<A, B> : true :
+    // check if B has a value then we know [-A, B] => never
+    [AbsValueB] extends [never] ? never
+    // otherwise we know -A, -B so we check IsGreater<Abs(B), Abs(A)>
+    : IsGreater<AbsValueB, AbsValueA>
 
 /*  *   *   *   *   test cases  *   *   *   *   */
-
-type t = [Compare<1, 2>, Compare<2, 1>, Compare<1, -3>, Compare<-1, -2>]
-//   ^?
 
 
 type MergeSortTest0 = Sorted<[]>
@@ -106,8 +106,8 @@ type MergeSortTest0 = Sorted<[]>
 type MergeSortTest1 = Sorted<[0]>
 //   ^?
 
-
-type MergeSortTest2 = Sorted<[-0, -0, 0]
+type MergeSortTest6 = Sorted<[-0, -1, 0, -7]>
+//   ^?
 
 type MergeSortTest2 = Sorted<[10, 8]>
 //   ^?
