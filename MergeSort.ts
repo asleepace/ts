@@ -66,7 +66,20 @@ type InsertElement<
             [First, ...InsertElement<Item, Rest>]
     : [Item, ...List, 'c']
 
-    
+type TestInsert0 = InsertElement<1, []>
+//   ^?
+
+type TestInsert1 = InsertElement<1, [0]>
+//   ^?
+
+type TestInsert2 = InsertElement<5, [3, 9]>
+//   ^?
+
+type TestInsert3 = InsertElement<8, [5, 10, 15]>
+//   ^?
+
+type TestInsert4 = InsertElement<8, [5, 8, 10, 15]>
+//   ^?
 
 type R = InsertElement<13, [1, 3, 4, 6, 9]>
 //   ^?
