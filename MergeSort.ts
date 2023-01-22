@@ -51,7 +51,7 @@ type test8 = IsGreater<5, 6>
     [[], []],
 ]
 
-
+// insert an element into a sorted list in ascending order
 type InsertElement<
     Item extends number, 
     List extends number[]=[],
@@ -64,7 +64,7 @@ type InsertElement<
         [IsGreater<Item, First>] extends [never] ?
             [Item, First, ...Rest] :
             [First, ...InsertElement<Item, Rest>]
-    : [Item, ...List, 'c']
+    : never
 
 type TestInsert0 = InsertElement<1, []>
 //   ^?
@@ -82,4 +82,25 @@ type TestInsert4 = InsertElement<8, [5, 8, 10, 15]>
 //   ^?
 
 type R = InsertElement<13, [1, 3, 4, 6, 9]>
+//   ^?
+
+
+type MergeSort<List extends number[]> =
+    List['length'] extends 0 ? [] :
+    List['length'] extends 1 ? List :
+    List extends [infer First, ...infer Rest] ?
+        InsertElement<First, MergeSort<Rest>>
+    : never
+
+
+type MergeSortTest1 = MergeSort<[5, 4, 7, 2, 3, 1, 8, 9, 6]>
+//   ^?
+
+type MergeSortTest2 = MergeSort<[1]>
+//   ^?
+
+type MergeSortTest3 = MergeSort<[10, 8]>
+//   ^?
+
+type MergeSortTest5 = MergeSort<[9, 8, 7, 6, 5, 4, 3, 2, 1, 1]>
 //   ^?
