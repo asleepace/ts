@@ -18,6 +18,9 @@ export namespace _$ {
     // convert a positive number to negative
     export type NEG<N extends number> = _$.NUM<`-${N}`>
 
+    // compare two values and return the lesser of the two
+    export type LES<A extends number, B extends number> =_$.BOX<A> extends [..._$.BOX<B>, ...infer U] ? [B, A] : [A, B]
+
     // convert a negative number to positive
     export type ABS<N extends number> = _$.STR<N> extends `${'-'|''}${infer M extends number}` ? M : N
 
@@ -35,18 +38,104 @@ export namespace _$ {
     // map at type over an array
     export type MAP<
         AnyBoxInput extends any[], 
-        Transform extends () => 1,
+        Transform extends <Input, Transform>(input: Input[], transform: Transform) => ReturnType<Transform>[],
         OutputBox extends any[]=[]
     > =
         AnyBoxInput[X] extends 0 ? OutputBox :
-        AnyBoxInput extends [infer F, ...infer R] ? MAP<R, Transform, [...OutputBox, ReturnType<Transform>]> : [...AnyBoxInput]
+        AnyBoxInput extends [infer F, ...infer R] ? MAP<R, Transform, [...OutputBox, Transform<F>]> : [...AnyBoxInput]
 
     // subtract two elements A and B, can return negative values
     export type SUB<A extends number, B extends number> = BOX<A> extends [...BOX<B>, ...infer U] ? U[X] : _$.NEG<SUB<B, A>>
 }
 
+function map<Input, Transform>(input: Input[], transform: Transform): ReturnType<Transform>[] {
+    return input.map(e => transform(e))
+}
 
-type M1 = _$.MAP<['1', '2', '3'], () => _$.NEG<1>>
+type Vals = '1' | '2' | '3'
+ 
+// exmaple of mapping
+type ValsType = Vals extends infer Item ? _$.NUM<Item> : never
+//   ^?
+
+type ExcludeTest = Exclude<1 | 2 | 3, 2>
+//   ^?
+
+type UnionToMap
+<
+    Union extends any, 
+    Tuple extends any[] = [],
+    UCopy = ReturnType<() => Union>,
+    First = [Union] extends [infer F, ...infer R] ? F : [],
+> = 
+    [Union] extends [never] ? Tuple :
+        Union extends infer Element ? (
+            UnionToMap<Exclude<UCopy, Element>, [...Tuple, Element]> 
+    ) : never
+
+
+
+
+       
+//   ^?
+
+type UnionAsParams<Union> = (...args: Union) => void
+//   ^?
+type UnionAsReturn<Union> = () => Union
+//   ^? 
+
+type GetFirstOfUnion<T extends any> = [T] extends [infer F, ...infer R] ? 
+    [F|R] | [T]
+: never
+
+type TestOne = GetFirstOfUnion<1|2|3>
+//   ^?
+
+type PassToBoth = UnionAsParams<UnionAsReturn<1 | 2 | 3>>
+//   ^?
+
+type GetFirst = [1 | 2 | 3] extends [infer F, ...infer R] ? F : []
+//   ^?
+
+type EmptyUnion = Exclude<1, 1>
+//   ^?
+
+type UtM = UnionToMap<1 | 2 | 3 | 4>
+//   ^?
+
+type NUtM = UnionToMap<>
+//   ^?
+
+// oh boy don't do this
+type UnionToIntersection<U> =
+  (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
+
+type LastOf<T> =
+  UnionToIntersection<T extends any ? () => T : never> extends () => (infer R) ? R : never
+
+type Last = LastOf<1|2|3>
+
+// TS4.0+
+type Push<T extends any[], V> = [...T, V];
+
+// TS4.1+
+type TuplifyUnion<T, L = LastOf<T>, N = [T] extends [never] ? true : false> =
+  true extends N ? [] : Push<TuplifyUnion<Exclude<T, L>>, L>
+
+type abc = 'a' | 'b' | 'c';
+type t = TuplifyUnion<abc>; // ["a", "b", "c"] 
+  
+type TestuToI = UnionToIntersection<1 | 2 | 3>
+//   ^?
+
+
+type R1<G> = _$.NEG<G>
+//   ^?
+
+type E1 = R1<'234'>
+//   ^?
+
+type M1 = _$.MAP<['1', '2', '3'], <G>() => G>
 //   ^?
 
 type S1 = _$.SUM<[1, 2, 3, 4]>
