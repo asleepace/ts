@@ -12,21 +12,16 @@
  * To change the order please see the IsGreater type above. Note that
  * this will not work for floating point numbers (yet).
  */
+
+type Sorted<List extends readonly number[]> = 
+    SortedInternal<[...List]>
+   
 type SortedInternal<List extends number[]> =
     List['length'] extends 0 ? [] :
     List['length'] extends 1 ? List :
     List extends [infer First, ...infer Rest] ?
         InsertElement<First, Sorted<Rest>>
     : List
-
-/**
- * Sorted - Read Only
- * 
- * This generic type can be used if the List is set to readonly, which
- * can occur when using "as const" with a JavaScript array. 
- */
-type Sorted<List extends readonly number[]> = SortedInternal<[...List]>
-   
 
 /**
  * Compare
@@ -50,6 +45,7 @@ type Compare<
     : IsGreater<AbsValueB, AbsValueA>
 
 
+
 // returns length of tuple T
 type Length<T extends any[]> = T['length']
 
@@ -60,13 +56,6 @@ type Tuple<S extends number, T extends any[]=[]> =
 // returns absolute value if a number is negative otherwise never
 type IsNegative<A extends number, S extends string = `${A}`> =
     S extends `-${infer V extends number}` ? V : never
-
-type IsN1 = IsNegative<-1>
-//   ^?
-type IsN2 = IsNegative<-10>
-//   ^?
-type IsN3 = IsNegative<3>
-//   ^?
 
 // returns true if A is greater than B otherwise never
 type IsGreater<A extends number, B extends number,
@@ -100,7 +89,12 @@ type InsertElement<Item extends number, List extends number[]=[]>=
 
 /*  *   *   *   *   test cases  *   *   *   *   */
 
-
+type IsN1 = IsNegative<(-1)>
+//   ^?
+type IsN2 = IsNegative<(-10)>
+//   ^?
+type IsN3 = IsNegative<(3)>
+//   ^?
 
 const ReadOnlyItems = [5, 3, 0, 6, 1, 2] as const
 
