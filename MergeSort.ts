@@ -67,14 +67,25 @@ type InsertElement<Item extends number, List extends number[]=[]>=
  * 
  * To change the order please see the IsGreater type above. Note that
  * this will not work for floating point numbers (yet).
- *
  */
-type Sorted<List extends number[]> =
+type SortedInternal<List extends number[]> =
     List['length'] extends 0 ? [] :
     List['length'] extends 1 ? List :
     List extends [infer First, ...infer Rest] ?
         InsertElement<First, Sorted<Rest>>
-    : never
+    : List
+
+
+
+/**
+ * Sorted - Read Only
+ * 
+ * This generic type can be used if the List is set to readonly, which
+ * can occur when using "as const" with a JavaScript array. 
+ */
+type Sorted<List extends readonly number[]> = SortedInternal<[...List]>
+   
+
 
 /**
  * Compare
@@ -97,8 +108,14 @@ type Compare<
     // otherwise we know -A, -B so we check IsGreater<Abs(B), Abs(A)>
     : IsGreater<AbsValueB, AbsValueA>
 
+
+
 /*  *   *   *   *   test cases  *   *   *   *   */
 
+
+const ReadOnlyItems = [5, 3, 0, 6, 1, 2] as const
+type TestDataSorted = Sorted<typeof ReadOnlyItems>
+//   ^?
 
 type MergeSortTest0 = Sorted<[]>
 //   ^?
@@ -109,7 +126,7 @@ type MergeSortTest1 = Sorted<[0]>
 type MergeSortTest6 = Sorted<[-0, -1, 0, -7]>
 //   ^?
 
-type MergeSortTest2 = Sorted<[10, 8]>
+type MergeSortTest2 = Sorted<[1, 5, 4]>
 //   ^?
 
 type MergeSortTest3 = Sorted<[2, 1, 3]>
@@ -122,4 +139,16 @@ type MergeSortTest4 = Sorted<[1, 6, 1, 3, -1, 6, 2, 3, 5]>
 //   ^?
 
 type MergeSortTest5 = Sorted<[9, 8, -7, 6, 5, 4, 3, 2, -1, 1]>
+//   ^?
+
+
+const someUnsortedData = [6, 1, 5, 3, 2] as const
+
+function shouldBeSorted<T>(input: Sorted<T>) {
+    // do something with sorted data
+}
+
+shouldBeSorted(someUnsortedData)
+
+type MergeSortTest6 = Sorted<[-0, -1, 0, -7]>
 //   ^?
